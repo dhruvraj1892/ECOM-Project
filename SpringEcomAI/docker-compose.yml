@@ -1,0 +1,21 @@
+services:
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: springecom-pgvector
+
+    environment:
+      POSTGRES_DB: telusko
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0076
+
+    labels:
+      - "org.springframework.boot.service-connection=postgres"
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -120,10 +120,10 @@ const Home = ({ selectedCategory }) => {
             </div>
           ) : (
             filteredProducts.map((product) => {
-              const { id, brand, name, price, productAvailable, productImage, stockQuantity } = product;
+              const { id, brand, name, price, productAvailable, imageData, stockQuantity } = product;
                 console.log(product);
                 console.log(data[0]);
-      console.log("imageData:", product.productImage);
+      console.log("imageData:", product.imageData);
       console.log("imageName:", product.imageName);
 
               return (
@@ -131,7 +131,7 @@ const Home = ({ selectedCategory }) => {
                   <div className={`card h-100 shadow-sm ${!productAvailable ? 'bg-light' : ''}`}>
                     <Link to={`/product/${id}`} className="text-decoration-none text-dark">
                       <img
-                        src={convertBase64ToDataURL(productImage)} 
+                        src={convertBase64ToDataURL(imageData)} 
                         alt={name}
                         className="card-img-top p-2"
                         style={{ height: "150px", objectFit: "cover" }}

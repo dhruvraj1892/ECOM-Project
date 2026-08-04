@@ -23,12 +23,13 @@ public class Product {
     private BigDecimal price;
     private String category;
     private Date releaseDate;
-    private boolean productAvailable;
+    @Column(name = "product_available")
+    private boolean isProductAvailable;
     private int stockQuantity;
     private String imageName;
     private String imageType;
     @Lob
-    private byte[] productImage;
+    private byte[] imageData;
 
     public Product(int id){
         this.id = id;
