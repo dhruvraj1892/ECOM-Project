@@ -32,7 +32,7 @@ public class OrderService {
 
     @Autowired
     private VectorStore vectorStore;
-
+     @Transactional
     public OrderResponse placeOrder(OrderRequest request) {
 
         Order order = new Order();
@@ -138,7 +138,7 @@ public class OrderService {
                 savedOrder.getOrderDate(),
                 itemResponses
         );
-
+     System.out.println("debug");
         return orderResponse;
     }
 
