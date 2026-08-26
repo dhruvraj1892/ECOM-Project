@@ -49,8 +49,11 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173",
-                        "https://ecom-project-jl2.vercel.app")
+                List.of(
+                        "https://ecom-project-jl2-*.vercel.app",
+                        "https://ecom-project-jl2.vercel.app",
+                        "http://localhost:*"
+                )
 
         );
 
