@@ -50,9 +50,7 @@ public class SecurityConfig {
 
         configuration.setAllowedOriginPatterns(
                 List.of(
-                        "https://ecom-project-jl2-*.vercel.app",
-                        "https://ecom-project-jl2.vercel.app",
-                        "http://localhost:*"
+                      "*"
                 )
         );
 
