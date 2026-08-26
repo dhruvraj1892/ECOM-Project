@@ -13,6 +13,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class OAuth2SuccessHandler
@@ -56,23 +58,19 @@ public class OAuth2SuccessHandler
         );
 
         String redirectUrl =
-                "http://localhost:5173/oauth2/success"
-                        + "?token="
-                        + token
-                        + "&name="
-                        + java.net.URLEncoder.encode(
+                "https://ecom-project-jl2.vercel.app/oauth2/success"
+                        + "?token=" + token
+                        + "&name=" + URLEncoder.encode(
                         user.getName(),
-                        java.nio.charset.StandardCharsets.UTF_8
+                        StandardCharsets.UTF_8
                 )
-                        + "&email="
-                        + java.net.URLEncoder.encode(
+                        + "&email=" + URLEncoder.encode(
                         user.getEmail(),
-                        java.nio.charset.StandardCharsets.UTF_8
+                        StandardCharsets.UTF_8
                 )
-                        + "&role="
-                        + java.net.URLEncoder.encode(
+                        + "&role=" + URLEncoder.encode(
                         user.getRole(),
-                        java.nio.charset.StandardCharsets.UTF_8
+                        StandardCharsets.UTF_8
                 );
 
         getRedirectStrategy().sendRedirect(
