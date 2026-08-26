@@ -6,6 +6,7 @@ import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,7 +46,7 @@ public class ProductController {
         else
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/product/generate-description")
     public ResponseEntity<String> generateDescription(@RequestParam String name, @RequestParam String category){
 
@@ -57,7 +58,7 @@ public class ProductController {
         }
 
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/product/generate-image")
     public ResponseEntity<?> generateImage(@RequestParam String name, @RequestParam String category, @RequestParam String description){
         try{
@@ -68,10 +69,11 @@ public class ProductController {
         }
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/product")
     public ResponseEntity<?> addProduct(@RequestPart Product product, @RequestPart MultipartFile imageFile){
         Product savedProduct = null;
+        System.out.println("product adding request");
         try {
             savedProduct = productService.addOrUpdateProduct(product, imageFile);
             return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
@@ -79,7 +81,7 @@ public class ProductController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/product/{id}")
     public ResponseEntity<String> updateProduct(@PathVariable int id, @RequestPart Product product, @RequestPart @Nullable MultipartFile imageFile){
         Product updatedProduct = null;
@@ -91,9 +93,10 @@ public class ProductController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/product/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable int id){
+        System.out.println("Delete request sent");
         Product product = productService.getProductById(id);
         if(product != null){
             productService.deleteProduct(id);

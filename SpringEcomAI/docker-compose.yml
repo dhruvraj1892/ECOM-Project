@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: telusko
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 0076
+      POSTGRES_PASSWORD: "0076"
 
     labels:
       - "org.springframework.boot.service-connection=postgres"

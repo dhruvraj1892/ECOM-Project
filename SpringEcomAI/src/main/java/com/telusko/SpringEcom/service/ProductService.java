@@ -72,17 +72,20 @@ public class ProductService {
         Document document = new Document(
                 UUID.randomUUID().toString(),
                 content,
-                Map.of("productId", String.valueOf(savedProduct.getId()))
+                Map.of(
+                        "type", "product",
+                        "productId", String.valueOf(savedProduct.getId())
+                )
         );
 
+        vectorStore.delete("productId == '" + savedProduct.getId() + "'");
         vectorStore.add(List.of(document));
 
         return savedProduct;
-
     }
 
-
     public void deleteProduct(int id) {
+        vectorStore.delete("productId == '" + id + "'");
         productRepo.deleteById(id);
     }
 
@@ -104,7 +107,7 @@ public class ProductService {
                 Avoid technical jargon and keep it customer-friendly.
                 Limit the description to 250 characters maximum.
                 
-                """, name , category );
+                """, name, category);
 
         String desc = chatClient.prompt(descPrompt)
                 .call()

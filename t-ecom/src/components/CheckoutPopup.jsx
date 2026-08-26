@@ -1,20 +1,25 @@
-import axios from 'axios';
-import React, { useState } from 'react';
-import { Modal, Button, Form, Toast, ToastContainer } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Modal, Button, Form, Toast, ToastContainer } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { apifetch } from "../utils/api";
+import axios from "../axios";
 
-const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
+const CheckoutPopup = ({
+    show,
+    handleClose,
+    cartItems,
+    totalPrice
+}) => {
 
-    const baseUrl = import.meta.env.VITE_BASE_URL;
     const navigate = useNavigate();
 
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
     const [validated, setValidated] = useState(false);
 
     const [showToast, setShowToast] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-    const [toastVariant, setToastVariant] = useState('success');
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastVariant, setToastVariant] = useState("success");
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,33 +38,30 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
         setValidated(true);
         setIsSubmitting(true);
 
-        // Prepare order data
-        const orderItems = cartItems.map(item => ({
-            productId: item.id,
-            quantity: item.quantity
-        }));
-
-        const orderData = {
-            customerName: name,
-            email: email,
-            items: orderItems
-        };
-
         try {
 
-            // 1. Create Razorpay order
-            const response = await axios.post(
-                `${baseUrl}/api/payment/create-order?amount=${totalPrice}`
+            const response = await apifetch(
+                `/api/payment/create-order?amount=${totalPrice}`,
+                {
+                    method: "POST"
+                }
             );
 
-            const razorpayOrder = response.data;
+            if (!response.ok) {
+                throw new Error(
+                    "Failed to create Razorpay order"
+                );
+            }
 
-            console.log("Razorpay order:", razorpayOrder);
+            const razorpayOrder = await response.json();
 
-            // 2. Open Razorpay Checkout
+            console.log(
+                "Razorpay order:",
+                razorpayOrder
+            );
+
             const options = {
 
-                // IMPORTANT: Use KEY ID, NOT SECRET
                 key: import.meta.env.VITE_RAZORPAY_ID,
 
                 amount: razorpayOrder.amount,
@@ -75,7 +77,6 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
                     email: email
                 },
 
-                // 3. Razorpay payment successful
                 handler: async function (paymentResponse) {
 
                     console.log(
@@ -85,31 +86,42 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
 
                     try {
 
-                        // 4. Verify payment
-                        // DO NOT call /api/orders/place here.
-                        // Backend will create the order after verification.
-                        const verifyResponse = await axios.post(
-                            `${baseUrl}/api/payment/verify`,
-                            {
-                                razorpayOrderId:
-                                    paymentResponse.razorpay_order_id,
+                        const verifyResponse =
+                            await apifetch(
+                                "/api/payment/verify",
+                                {
+                                    method: "POST",
+                                    body: JSON.stringify({
+                                        razorpayOrderId:
+                                            paymentResponse
+                                                .razorpay_order_id,
 
-                                razorpayPaymentId:
-                                    paymentResponse.razorpay_payment_id,
+                                        razorpayPaymentId:
+                                            paymentResponse
+                                                .razorpay_payment_id,
 
-                                razorpaySignature:
-                                    paymentResponse.razorpay_signature,
+                                        razorpaySignature:
+                                            paymentResponse
+                                                .razorpay_signature
+                                    })
+                                }
+                            );
 
-                                orderRequest: orderData
-                            }
-                        );
+                        if (!verifyResponse.ok) {
+                            throw new Error(
+                                "Payment verification failed"
+                            );
+                        }
+
+                        const verifyData =
+                            await verifyResponse.json();
 
                         console.log(
                             "Payment verification response:",
-                            verifyResponse.data
+                            verifyData
                         );
 
-                        // Payment verified and order created
+                      
                         setToastVariant("success");
 
                         setToastMessage(
@@ -118,18 +130,18 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
 
                         setShowToast(true);
 
-                        // Clear cart
-                        localStorage.removeItem("cart");
+                        localStorage.removeItem(
+                            "cart"
+                        );
 
-                        // Redirect to orders page
                         setTimeout(() => {
-                            navigate("/orders");
+                            navigate("/myOrders");
                         }, 2000);
 
                     } catch (error) {
 
                         console.error(
-                            "Payment verification failed:",
+                            "Payment verification/order placement failed:",
                             error
                         );
 
@@ -145,7 +157,6 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
                     setIsSubmitting(false);
                 },
 
-                // If user closes Razorpay
                 modal: {
                     ondismiss: function () {
                         setIsSubmitting(false);
@@ -153,8 +164,8 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
                 }
             };
 
-            // Open Razorpay
-            const razorpay = new window.Razorpay(options);
+            const razorpay =
+                new window.Razorpay(options);
 
             razorpay.open();
 
@@ -179,24 +190,21 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
 
     const convertBase64ToDataURL = (
         base64String,
-        mimeType = 'image/jpeg'
+        mimeType = "image/jpeg"
     ) => {
 
         if (!base64String) {
-            return '';
+            return "";
         }
 
-        // Already a data URL
-        if (base64String.startsWith('data:')) {
+        if (base64String.startsWith("data:")) {
             return base64String;
         }
 
-        // Already a URL
-        if (base64String.startsWith('http')) {
+        if (base64String.startsWith("http")) {
             return base64String;
         }
 
-        // Base64 → data URL
         return `data:${mimeType};base64,${base64String}`;
     };
 
@@ -209,9 +217,11 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
             >
 
                 <Modal.Header closeButton>
+
                     <Modal.Title>
                         Checkout
                     </Modal.Title>
+
                 </Modal.Header>
 
                 <Form
@@ -233,21 +243,21 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
 
                                     <img
                                         src={convertBase64ToDataURL(
-                                            item.imageData
+                                            item.product.imageData
                                         )}
-                                        alt={item.name}
+                                        alt={item.product.name}
                                         className="me-3 rounded"
                                         style={{
-                                            width: '80px',
-                                            height: '80px',
-                                            objectFit: 'cover'
+                                            width: "80px",
+                                            height: "80px",
+                                            objectFit: "cover"
                                         }}
                                     />
 
                                     <div className="flex-grow-1">
 
                                         <h6 className="mb-1">
-                                            {item.name}
+                                            {item.product.name}
                                         </h6>
 
                                         <p className="mb-1 small">
@@ -256,8 +266,10 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
 
                                         <p className="mb-0 small">
                                             Price: ₹
-                                            {(item.price * item.quantity)
-                                                .toFixed(2)}
+                                            {(
+                                                item.product.price *
+                                                item.quantity
+                                            ).toFixed(2)}
                                         </p>
 
                                     </div>
@@ -352,7 +364,7 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
                                 </>
 
                             ) : (
-                                'Confirm Purchase'
+                                "Confirm Purchase"
                             )}
 
                         </Button>
@@ -371,7 +383,9 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
 
                 <Toast
                     show={showToast}
-                    onClose={() => setShowToast(false)}
+                    onClose={() =>
+                        setShowToast(false)
+                    }
                     delay={3000}
                     autohide
                     bg={toastVariant}
@@ -387,9 +401,9 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice }) => {
 
                     <Toast.Body
                         className={
-                            toastVariant === 'success'
-                                ? 'text-white'
-                                : ''
+                            toastVariant === "success"
+                                ? "text-white"
+                                : ""
                         }
                     >
                         {toastMessage}

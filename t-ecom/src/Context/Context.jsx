@@ -7,65 +7,118 @@ const AppContext = createContext({
   cart: [],
   addToCart: (product) => {},
   removeFromCart: (productId) => {},
-  refreshData:() =>{},
-  updateStockQuantity: (productId, newQuantity) =>{}
-  
+  refreshData: () => {},
+  updateStockQuantity: (productId, newQuantity) => {}
 });
 
 export const AppProvider = ({ children }) => {
   const [data, setData] = useState([]);
   const [isError, setIsError] = useState("");
-  const [cart, setCart] = useState(JSON.parse(localStorage.getItem('cart')) || []);
-  const baseUrl = import.meta.env.VITE_BASE_URL;
+  const [cart, setCart] = useState([]);
 
-  const addToCart = (product) => {
-    const existingProductIndex = cart.findIndex((item) => item.id === product.id);
-    if (existingProductIndex !== -1) {
-      const updatedCart = cart.map((item, index) =>
-        index === existingProductIndex
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      );
-      setCart(updatedCart);
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
-    } else {
-      const updatedCart = [...cart, { ...product, quantity: 1 }];
-      setCart(updatedCart);
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
+  const addToCart = async (product) => {
+    try {
+      const response = await axios.post(`/api/cart/add/${product.id}`);
+
+      setCart((prevCart) => {
+        const existing = prevCart.find(
+          (item) => item.product.id === product.id
+        );
+
+        if (existing) {
+          return prevCart.map((item) =>
+            item.product.id === product.id ? response.data : item
+          );
+        }
+
+        return [...prevCart, response.data];
+      });
+    } catch (error) {
+      console.log("error adding to cart " + error);
     }
   };
 
-  const removeFromCart = (productId) => {
-    console.log("productID",productId)
-    const updatedCart = cart.filter((item) => item.id !== productId);
-    setCart(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-    console.log("CART",cart)
+  const removeFromCart = async (productId) => {
+    try {
+      await axios.delete(`/api/cart/${productId}`);
+
+      setCart((prevCart) =>
+        prevCart.filter(
+          (item) => item.product.id !== productId
+        )
+      );
+    } catch (error) {
+      console.error("Error removing from cart:", error);
+    }
   };
 
   const refreshData = async () => {
     try {
-      const response = await axios.get(`${baseUrl}/api/products`);
+      const response = await axios.get("/api/products");
+
       setData(response.data);
+      setIsError("");
     } catch (error) {
+      console.error("Error fetching products:", error);
       setIsError(error.message);
     }
   };
 
-  const clearCart =() =>{
-    setCart([]);
-  }
-  
-  useEffect(() => {
-    refreshData();
-  }, []);
+  const clearCart = async () => {
+    try {
+      await axios.delete("/api/cart/clear");
+      setCart([]);
+    } catch (error) {
+      console.log("error clearing cart " + error);
+    }
+  };
+
+  const getCart = async () => {
+    try {
+      const response = await axios.get("/api/cart");
+      setCart(response.data);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+    }
+  };
+
+  const updateStockQuantity = async (productId, newQuantity) => {
+    try {
+      const response = await axios.put(`/api/cart/${productId}`, {
+        quantity: newQuantity
+      });
+
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.product.id === productId ? response.data : item
+        )
+      );
+    } catch (error) {
+      console.error("Error updating cart quantity:", error);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
-  
+    refreshData();
+
+    if (localStorage.getItem("token")) {
+      getCart();
+    }
+  }, []);
+
   return (
-    <AppContext.Provider value={{ data, isError, cart, addToCart, removeFromCart,refreshData, clearCart  }}>
+    <AppContext.Provider
+      value={{
+        data,
+        isError,
+        cart,
+        addToCart,
+        removeFromCart,
+        refreshData,
+        updateStockQuantity,
+        clearCart
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

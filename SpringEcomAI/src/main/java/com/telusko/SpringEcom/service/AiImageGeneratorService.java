@@ -7,8 +7,6 @@ import org.springframework.ai.openai.OpenAiImageOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.Base64;
 
 @Service
@@ -26,26 +24,27 @@ public class AiImageGeneratorService {
                 .quality("medium")
                 .model("gpt-image-1")
                 .build();
-    System.out.println("Image generation requested");
-        ImageResponse response = imageModel.call(new ImagePrompt(imagePrompt, options));
-         System.out.println("response returned");
-        String imageUrl = response.getResult().getOutput().getUrl();
-        String b64 = response.getResult().getOutput().getB64Json();
-         System.out.println("Image generation processing");
-        try {
-            if (imageUrl != null) {
-                System.out.println("Image generated successfully");
-                return new URL(imageUrl).openStream().readAllBytes();
-            } else if (b64 != null) {
-                System.out.println("Image generated successfully");
-                return Base64.getDecoder().decode(b64);
-            } else {
-                System.out.println("Image generation failed");
-                throw new RuntimeException("No image data returned from OpenAI");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+        System.out.println("Image generation requested");
+
+        ImageResponse response =
+                imageModel.call(
+                        new ImagePrompt(imagePrompt, options)
+                );
+
+        System.out.println("response returned");
+
+        String b64 = response.getResult()
+                .getOutput()
+                .getB64Json();
+
+        if (b64 != null) {
+            System.out.println("Image generated successfully");
+            return Base64.getDecoder().decode(b64);
         }
 
+        throw new RuntimeException(
+                "No image data returned from OpenAI"
+        );
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -25,8 +26,10 @@ public class ChatBotService {
     @Autowired
     private ChatClient chatClient;
 
-    public String getBotResponse(String userQuery){
-
+    public String getBotResponse(String userQuery, String email, Authentication authentication){
+        boolean isAdmin = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         try{
             String promptStringTemplate = Files.readString(
                     resourceLoader.getResource("classpath:prompts/chatbot-rag-prompt.st")
@@ -34,7 +37,7 @@ public class ChatBotService {
                             .toPath()
             );
 
-            String context = fetchSemanticContext(userQuery);
+            String context = fetchSemanticContext(userQuery,email ,isAdmin);
 //            System.out.println("user query: "+userQuery);
 //            System.out.println(context);
             System.out.println("user Query "+ userQuery);
@@ -56,7 +59,7 @@ public class ChatBotService {
 
     }
 
-    private String fetchSemanticContext(String userQuery) {
+    private String fetchSemanticContext(String userQuery,String email,boolean isAdmin) {
 
         List<Document> documents = vectorStore.similaritySearch(
                 SearchRequest.builder()
@@ -68,7 +71,26 @@ public class ChatBotService {
         System.out.println("documents found:" +documents.size());
         StringBuilder context = new StringBuilder();
         for (Document document : documents) {
-            context.append(document.getFormattedContent()).append("\n");
+         Map<String,Object> metadata=document.getMetadata();
+         String type=(String) metadata.get("type");
+            if ("product".equals(type)) {
+                context.append(document.getFormattedContent()).append("\n");
+            }
+
+            else if ("order".equals(type)) {
+
+                if (isAdmin) {
+                    context.append(document.getFormattedContent()).append("\n");
+                }
+
+                else {
+                    String orderEmail = (String) metadata.get("email");
+
+                    if (email.equals(orderEmail)) {
+                        context.append(document.getFormattedContent()).append("\n");
+                    }
+                }
+            }
         }
         return context.toString();
     }

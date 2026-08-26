@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../axios';
 
-const Order = () => {
+const MyOrder = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,7 +10,7 @@ const Order = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("/api/orders");
+        const response = await axios.get("/api/orders/my");
 
         setOrders(response.data);
         setLoading(false);
@@ -250,4 +250,4 @@ const Order = () => {
   );
 };
 
-export default Order;
+export default MyOrder;

@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/payment")
@@ -50,9 +51,10 @@ private String keyId;
     }
     @PostMapping("/verify")
     public ResponseEntity<?> verifyPayment(
-            @RequestBody PaymentVerificationRequest request) {
+            @RequestBody PaymentVerificationRequest request,
+            Authentication authentication) {
 
-        boolean verified= paymentService.verifyPayment(request);
+        boolean verified = paymentService.verifyPayment(request);
 
         if (!verified) {
             return ResponseEntity
@@ -60,11 +62,14 @@ private String keyId;
                     .body("Payment verification failed");
         }
 
+        String email = authentication.getName();
+
         OrderResponse orderResponse =
-                orderService.placeOrder(request.orderRequest());
-      System.out.println("Order Placed");
+                orderService.placeOrder(email);
+
+        System.out.println("Order Placed");
+
         return ResponseEntity.ok(orderResponse);
     }
-
 
 };
