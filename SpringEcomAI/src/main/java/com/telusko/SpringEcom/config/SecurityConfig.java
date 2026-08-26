@@ -48,13 +48,12 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
+        configuration.setAllowedOriginPatterns(
                 List.of(
                         "https://ecom-project-jl2-*.vercel.app",
                         "https://ecom-project-jl2.vercel.app",
                         "http://localhost:*"
                 )
-
         );
 
         configuration.setAllowedMethods(
@@ -110,10 +109,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                /*
-                 * VERY IMPORTANT:
-                 * Don't redirect REST API requests to Google login.
-                 */
                 .exceptionHandling(exception ->
                         exception.defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(
