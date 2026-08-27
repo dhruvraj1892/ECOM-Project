@@ -11,7 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,45 +22,65 @@ public class ChatBotService {
 
     @Autowired
     private ResourceLoader resourceLoader;
+
     @Autowired
     private PgVectorStore vectorStore;
+
     @Autowired
     private ChatClient chatClient;
 
-    public String getBotResponse(String userQuery, String email, Authentication authentication){
+    public String getBotResponse(
+            String userQuery,
+            String email,
+            Authentication authentication) {
+
         boolean isAdmin = authentication.getAuthorities()
                 .stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        try{
-            String promptStringTemplate = Files.readString(
-                    resourceLoader.getResource("classpath:prompts/chatbot-rag-prompt.st")
-                            .getFile()
-                            .toPath()
+
+        try {
+
+            InputStream inputStream = resourceLoader
+                    .getResource("classpath:prompts/chatbot-rag-prompt.st")
+                    .getInputStream();
+
+            String promptStringTemplate = new String(
+                    inputStream.readAllBytes(),
+                    StandardCharsets.UTF_8
             );
 
-            String context = fetchSemanticContext(userQuery,email ,isAdmin);
-//            System.out.println("user query: "+userQuery);
-//            System.out.println(context);
-            System.out.println("user Query "+ userQuery);
-            System.out.println("context: "+context);
-            Map<String,Object> variables = new HashMap<>();
-            variables.put("userQuery",userQuery);
-            variables.put("context",context);
+            String context = fetchSemanticContext(
+                    userQuery,
+                    email,
+                    isAdmin
+            );
+
+            System.out.println("user Query " + userQuery);
+            System.out.println("context: " + context);
+
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("userQuery", userQuery);
+            variables.put("context", context);
 
             PromptTemplate promptTemplate = PromptTemplate.builder()
                     .template(promptStringTemplate)
                     .variables(variables)
                     .build();
 
-            return chatClient.prompt(promptTemplate.create()).call().content();
+            return chatClient
+                    .prompt(promptTemplate.create())
+                    .call()
+                    .content();
 
-        }catch (IOException e){
+        } catch (IOException e) {
             return "Bot Failed " + e.getMessage();
         }
-
     }
 
-    private String fetchSemanticContext(String userQuery,String email,boolean isAdmin) {
+    private String fetchSemanticContext(
+            String userQuery,
+            String email,
+            boolean isAdmin) {
 
         List<Document> documents = vectorStore.similaritySearch(
                 SearchRequest.builder()
@@ -68,30 +89,46 @@ public class ChatBotService {
                         .similarityThreshold(0.5f)
                         .build()
         );
-        System.out.println("documents found:" +documents.size());
-        StringBuilder context = new StringBuilder();
-        for (Document document : documents) {
-         Map<String,Object> metadata=document.getMetadata();
-         String type=(String) metadata.get("type");
-            if ("product".equals(type)) {
-                context.append(document.getFormattedContent()).append("\n");
-            }
 
-            else if ("order".equals(type)) {
+        System.out.println("documents found:" + documents.size());
+
+        StringBuilder context = new StringBuilder();
+
+        for (Document document : documents) {
+
+            Map<String, Object> metadata = document.getMetadata();
+
+            String type = (String) metadata.get("type");
+
+            if ("product".equals(type)) {
+
+                context.append(
+                        document.getFormattedContent()
+                ).append("\n");
+
+            } else if ("order".equals(type)) {
 
                 if (isAdmin) {
-                    context.append(document.getFormattedContent()).append("\n");
-                }
 
-                else {
-                    String orderEmail = (String) metadata.get("email");
+                    context.append(
+                            document.getFormattedContent()
+                    ).append("\n");
+
+                } else {
+
+                    String orderEmail =
+                            (String) metadata.get("email");
 
                     if (email.equals(orderEmail)) {
-                        context.append(document.getFormattedContent()).append("\n");
+
+                        context.append(
+                                document.getFormattedContent()
+                        ).append("\n");
                     }
                 }
             }
         }
+
         return context.toString();
     }
 }
