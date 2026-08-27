@@ -50,8 +50,7 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(
                 List.of(
-                        "https://ecom-project-ijl2.vercel.app",
-                        "http://localhost:5173"
+                      "*"
                 )
         );
 
