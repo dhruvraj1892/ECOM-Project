@@ -61,7 +61,7 @@ public class OAuth2SuccessHandler
         );
 
         String redirectUrl =
-                "https://ecom-project-ijl2.vercel.app/oauth2/success"
+                "https://smart-i-kart-frontend-git-razorpay-dhruvraj1892.vercel.app/oauth2/success"
                         + "?token=" + URLEncoder.encode(
                         token,
                         StandardCharsets.UTF_8
