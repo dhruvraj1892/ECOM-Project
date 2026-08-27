@@ -48,9 +48,10 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(
+        configuration.setAllowedOrigins(
                 List.of(
-                      "*"
+                        "https://ecom-project-ijl2.vercel.app",
+                        "http://localhost:5173"
                 )
         );
 
@@ -65,7 +66,10 @@ public class SecurityConfig {
         );
 
         configuration.setAllowedHeaders(
-                List.of("*")
+                List.of(
+                        "Authorization",
+                        "Content-Type"
+                )
         );
 
         UrlBasedCorsConfigurationSource source =

@@ -46,7 +46,10 @@ public class OAuth2SuccessHandler
 
                     newUser.setName(name);
                     newUser.setEmail(email);
+
+                    // Google OAuth user does not use local password
                     newUser.setPassword("");
+
                     newUser.setRole("USER");
 
                     return userRepo.save(newUser);
@@ -58,8 +61,11 @@ public class OAuth2SuccessHandler
         );
 
         String redirectUrl =
-                "https://ecom-project-jl2.vercel.app/oauth2/success"
-                        + "?token=" + token
+                "https://ecom-project-ijl2.vercel.app/oauth2/success"
+                        + "?token=" + URLEncoder.encode(
+                        token,
+                        StandardCharsets.UTF_8
+                )
                         + "&name=" + URLEncoder.encode(
                         user.getName(),
                         StandardCharsets.UTF_8
