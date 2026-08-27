@@ -47,10 +47,9 @@ public class OAuth2SuccessHandler
                     newUser.setName(name);
                     newUser.setEmail(email);
 
-                    // Google OAuth user does not use local password
                     newUser.setPassword("");
 
-                    newUser.setRole("USER");
+                    newUser.setRole("ADMIN");
 
                     return userRepo.save(newUser);
                 });
