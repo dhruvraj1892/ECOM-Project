@@ -50,7 +50,7 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(
                 List.of(
-                      "*"
+                      "/admnaondi"
                 )
         );
 
