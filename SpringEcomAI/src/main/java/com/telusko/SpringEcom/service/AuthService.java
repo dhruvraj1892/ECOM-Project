@@ -33,7 +33,7 @@ public class AuthService {
             throw new RuntimeException("Email already registered");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("ADMIN");
+        user.setRole("USER");
         return userRepo.save(user);
     }
 
