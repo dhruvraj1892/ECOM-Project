@@ -97,19 +97,7 @@ public class SecurityConfig {
                         )
                 )
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/payment/**",
-                                "/api/products/**",
-                                "/api/product/**",
-                                "/oauth2/**",
-                                "/login/**"
-                        ).permitAll()
-
-                        .anyRequest().authenticated()
-                )
-
+            
                 .exceptionHandling(exception ->
                         exception.defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(
