@@ -49,9 +49,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of(
-                      "/admnaondi"
-                )
+                List.of("*")
         );
 
         configuration.setAllowedMethods(
@@ -65,10 +63,7 @@ public class SecurityConfig {
         );
 
         configuration.setAllowedHeaders(
-                List.of(
-                        "Authorization",
-                        "Content-Type"
-                )
+                List.of("*")
         );
 
         UrlBasedCorsConfigurationSource source =
@@ -97,7 +92,6 @@ public class SecurityConfig {
                         )
                 )
 
-            
                 .exceptionHandling(exception ->
                         exception.defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(
@@ -105,6 +99,18 @@ public class SecurityConfig {
                                 ),
                                 new AntPathRequestMatcher("/api/**")
                         )
+                )
+
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/payment/**",
+                                "/api/products/**",
+                                "/api/product/**",
+                                "/oauth2/**",
+                                "/login/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
 
                 .addFilterBefore(
